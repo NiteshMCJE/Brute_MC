@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brute MC — Dominate the Block</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Ambient Background -->
+    <div class="ambient-glow"></div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-inner">
+            <a href="index.html" class="brand">
+                <!-- Place your GIF logo here -->
+                <img src="assets/logo.gif" alt="Brute MC Logo" class="logo-gif">
+                <span class="brand-text">BRUTE<span>MC</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="index.html" class="active">Home</a>
+                <a href="gems.html">Gems</a>
+                <a href="rules.html">Rules</a>
+                <a href="https://discord.gg/Rszs4w3XYF" target="_blank" class="dc-link"><i class="fab fa-discord"></i> Discord</a>
+            </div>
+            <button class="btn btn-primary copy-ip-btn" data-ip="brutemc.dpdns.org">
+                <i class="fas fa-copy"></i> Copy IP
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="hero">
+        <div class="hero-content">
+            <h1 class="hero-title">DOMINATE THE BLOCK.</h1>
+            <div class="hero-badges">
+                <span>Cracked Support</span>
+                <span>1.16.x – 26.3</span>
+                <span>Bliss SMP</span>
+            </div>
+            <div class="hero-cta">
+                <button class="btn btn-large btn-primary copy-ip-btn" data-ip="brutemc.dpdns.org">
+                    <i class="fas fa-server"></i> Play Now
+                </button>
+                <a href="https://discord.gg/Rszs4w3XYF" target="_blank" class="btn btn-large btn-secondary">
+                    <i class="fab fa-discord"></i> Join Discord
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Network Status Section -->
+    <section class="container section-padding reveal" id="status">
+        <div class="section-header">
+            <h2>Network Status</h2>
+            <p>Live data from <strong>brutemc.dpdns.org</strong></p>
+        </div>
+
+        <div class="status-card glass-panel">
+            <div class="status-top">
+                <div class="status-indicator" id="server-status">
+                    <span class="dot loading"></span>
+                    <span class="status-text">Fetching...</span>
+                </div>
+                <div class="status-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Uptime</span>
+                        <span class="stat-value" id="server-uptime">--h --m</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Players</span>
+                        <span class="stat-value"><span id="player-count">0</span> / <span id="player-max">100</span></span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Version</span>
+                        <span class="stat-value" id="server-version">--</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="player-list-container">
+                <h3>Players Online</h3>
+                <div class="player-list" id="player-list">
+                    <p class="empty-text">No players currently online.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Discord CTA -->
+    <section class="container section-padding reveal">
+        <div class="discord-card glass-panel">
+            <i class="fab fa-discord dc-icon"></i>
+            <div class="dc-text">
+                <h2>Join the Community</h2>
+                <p>Chat with players, find teammates, and get support.</p>
+            </div>
+            <a href="https://discord.gg/Rszs4w3XYF" target="_blank" class="btn btn-primary">Join Server</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>&copy; 2024 Brute MC. Not affiliated with Mojang or Microsoft.</p>
+    </footer>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
