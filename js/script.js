@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 4. Live API Fetching (From your provided code) ---
+    // --- 4. Live API Fetching ---
     async function fetchStatus(ip, port, badgeId, countId = null, playersId = null) {
         try {
             const response = await fetch(`https://api.mcstatus.io/v2/status/java/${ip}:${port}`);
@@ -79,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (countId) {
                     const count = document.getElementById(countId);
                     if (count) {
-                        // Count-up animation
                         let startTimestamp = null;
                         const end = data.players.online;
                         const duration = 1000;
@@ -143,12 +142,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Run on page load (Only if we are on the home page)
     if (document.getElementById('main-badge')) {
-        // Fetch status for the main server
-        fetchStatus('brutemc.dpdns.org', '25565', 'main-badge', 'player-count', 'player-list');
+        // Fetch status using the specific host and port
+        const apiHost = 'dubai-premium.treemc.host';
+        const apiPort = '21152';
+        
+        fetchStatus(apiHost, apiPort, 'main-badge', 'player-count', 'player-list');
         
         // Refresh every 60 seconds
         setInterval(() => {
-            fetchStatus('brutemc.dpdns.org', '25565', 'main-badge', 'player-count', 'player-list');
+            fetchStatus(apiHost, apiPort, 'main-badge', 'player-count', 'player-list');
         }, 60000);
     }
 });
