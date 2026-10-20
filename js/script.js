@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 2. Copy IP Button & Toast ---
     const copyBtns = document.querySelectorAll('.copy-ip-btn');
     
-    // Create toast element
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.innerText = 'IP Copied to Clipboard!';
@@ -62,12 +61,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 4. Live API Fetching (Home Page) ---
+    // --- 4. Live API Fetching (Using mcstatus.io) ---
     const serverIP = 'brutemc.dpdns.org';
-    const apiURL = `https://api.mcsrvstat.us/3/${serverIP}`;
+    const serverPort = '25565'; // Default Minecraft port
+    const apiURL = `https://api.mcstatus.io/v2/status/java/${serverIP}:${serverPort}`;
 
     if (document.getElementById('server-status')) {
         
+        // We use a session start time to mock uptime since APIs rarely provide exact boot times
         let sessionStartTime = Date.now() - (2 * 60 * 60 * 1000); 
         
         async function fetchServerStatus() {
@@ -84,52 +85,41 @@ document.addEventListener('DOMContentLoaded', () => {
                 const playerListEl = document.getElementById('player-list');
 
                 if (data.online) {
+                    // --- ONLINE STATE ---
                     statusDot.className = 'dot online';
                     statusText.innerText = 'ONLINE';
                     statusText.style.color = 'var(--green)';
                     
+                    // Player Counts (mcstatus.io returns online/max directly)
                     const currentPlayers = data.players.online;
                     const maxPlayers = data.players.max || 50;
                     
                     animateValue(playerCountEl, 0, currentPlayers, 1000);
                     playerMaxEl.innerText = maxPlayers;
-                    versionEl.innerText = data.version || '1.21.x';
                     
+                    // Version (mcstatus.io returns an object with name_clean)
+                    versionEl.innerText = data.version.name_clean || data.version.name_raw || '1.21.x';
+                    
+                    // Uptime Logic
                     updateUptime(uptimeEl, sessionStartTime);
 
-                    // --- THE PLAYER LIST FIX ---
-                    if (currentPlayers > 0 && data.players.list) {
+                    // Player List
+                    if (currentPlayers > 0 && data.players.list && data.players.list.length > 0) {
                         playerListEl.innerHTML = '';
                         
-                        let playerNames = [];
-
-                        // Check if the API returned an array (Objects or Strings)
-                        if (Array.isArray(data.players.list)) {
-                            data.players.list.forEach(p => {
-                                // If it's an object, grab the name. If it's a string, grab the string.
-                                let name = typeof p === 'object' ? p.name : p;
-                                if (name) playerNames.push(name);
-                            });
-                        } 
-                        // Check if the API returned a raw string (e.g. "Notch, Herobrine")
-                        else if (typeof data.players.list === 'string') {
-                            playerNames = data.players.list.split(',').map(n => n.trim());
-                        }
-
-                        // Render the extracted names
-                        if (playerNames.length > 0) {
-                            playerNames.forEach(name => {
-                                const tag = document.createElement('div');
-                                tag.className = 'player-tag';
-                                // Use mc-heads.net for avatars
-                                const headUrl = `https://mc-heads.net/avatar/${name}/24`;
-                                tag.innerHTML = `<img src="${headUrl}" alt="${name}"> ${name}`;
-                                playerListEl.appendChild(tag);
-                            });
-                        } else {
-                            playerListEl.innerHTML = '<p class="empty-text">Players are online, but names are hidden.</p>';
-                        }
-
+                        data.players.list.forEach(player => {
+                            const tag = document.createElement('div');
+                            tag.className = 'player-tag';
+                            
+                            // mcstatus.io uses 'name_clean' for the plain text name
+                            const playerName = player.name_clean || 'Unknown';
+                            
+                            // Use mc-heads.net for avatars
+                            const headUrl = `https://mc-heads.net/avatar/${playerName}/24`;
+                            
+                            tag.innerHTML = `<img src="${headUrl}" alt="${playerName}"> ${playerName}`;
+                            playerListEl.appendChild(tag);
+                        });
                     } else if (currentPlayers === 0) {
                         playerListEl.innerHTML = '<p class="empty-text">No players currently online.</p>';
                     } else {
@@ -137,6 +127,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
 
                 } else {
+                    // --- OFFLINE STATE ---
                     setOfflineState();
                 }
             } catch (error) {
@@ -161,12 +152,15 @@ document.addEventListener('DOMContentLoaded', () => {
         function updateUptime(element, startTime) {
             const now = Date.now();
             const diff = now - startTime;
+            
             const hours = Math.floor(diff / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
             element.innerText = `${hours}h ${minutes}m`;
         }
 
         function animateValue(obj, start, end, duration) {
+            if (!obj) return;
             let startTimestamp = null;
             const step = (timestamp) => {
                 if (!startTimestamp) startTimestamp = timestamp;
@@ -179,13 +173,18 @@ document.addEventListener('DOMContentLoaded', () => {
             window.requestAnimationFrame(step);
         }
 
+        // Initial fetch
         fetchServerStatus();
+        
+        // Live Uptime update loop
         setInterval(() => {
             const uptimeEl = document.getElementById('server-uptime');
             if (uptimeEl && document.querySelector('#server-status .dot').classList.contains('online')) {
                 updateUptime(uptimeEl, sessionStartTime);
             }
         }, 60000);
+
+        // Re-fetch full API data every 60 seconds
         setInterval(fetchServerStatus, 60000);
     }
 });
