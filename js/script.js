@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 toast.classList.add('show');
                 setTimeout(() => toast.classList.remove('show'), 3000);
                 
-                // Visual feedback on button
                 const originalHTML = btn.innerHTML;
                 btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
                 btn.style.background = '#3ddc84';
@@ -53,11 +52,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (tabBtns.length > 0) {
         tabBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                // Remove active class from all
                 tabBtns.forEach(b => b.classList.remove('active'));
                 tabContents.forEach(c => c.classList.remove('active'));
                 
-                // Add active to clicked
                 btn.classList.add('active');
                 const targetId = btn.getAttribute('data-target');
                 document.getElementById(targetId).classList.add('active');
@@ -69,11 +66,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const serverIP = 'brutemc.dpdns.org';
     const apiURL = `https://api.mcsrvstat.us/3/${serverIP}`;
 
-    // Only run API fetch if elements exist on page
     if (document.getElementById('server-status')) {
         
-        // Mock start time for uptime calculation
-        let sessionStartTime = Date.now() - (2 * 60 * 60 * 1000); // Mock: server started 2 hours ago
+        let sessionStartTime = Date.now() - (2 * 60 * 60 * 1000); 
         
         async function fetchServerStatus() {
             try {
@@ -89,50 +84,59 @@ document.addEventListener('DOMContentLoaded', () => {
                 const playerListEl = document.getElementById('player-list');
 
                 if (data.online) {
-                    // Online State
                     statusDot.className = 'dot online';
                     statusText.innerText = 'ONLINE';
                     statusText.style.color = 'var(--green)';
                     
-                    // Player Counts with Count-Up Animation
                     const currentPlayers = data.players.online;
                     const maxPlayers = data.players.max || 50;
+                    
                     animateValue(playerCountEl, 0, currentPlayers, 1000);
                     playerMaxEl.innerText = maxPlayers;
-                    
-                    // Version
                     versionEl.innerText = data.version || '1.21.x';
                     
-                    // Uptime Logic
                     updateUptime(uptimeEl, sessionStartTime);
 
-                    // Player List
+                    // --- THE PLAYER LIST FIX ---
                     if (currentPlayers > 0 && data.players.list) {
                         playerListEl.innerHTML = '';
                         
-                        data.players.list.forEach(player => {
-                            // FIX: Extract name and UUID correctly from the API object
-                            const playerName = player.name || player;
-                            const playerUUID = player.uuid || playerName; // Fallback to name if UUID missing
+                        let playerNames = [];
 
-                            const tag = document.createElement('div');
-                            tag.className = 'player-tag';
-                            
-                            // Use mc-heads.net for avatars (using UUID for accuracy)
-                            const headUrl = `https://mc-heads.net/avatar/${playerUUID}/24`;
-                            
-                            tag.innerHTML = `<img src="${headUrl}" alt="${playerName}"> ${playerName}`;
-                            playerListEl.appendChild(tag);
-                        });
+                        // Check if the API returned an array (Objects or Strings)
+                        if (Array.isArray(data.players.list)) {
+                            data.players.list.forEach(p => {
+                                // If it's an object, grab the name. If it's a string, grab the string.
+                                let name = typeof p === 'object' ? p.name : p;
+                                if (name) playerNames.push(name);
+                            });
+                        } 
+                        // Check if the API returned a raw string (e.g. "Notch, Herobrine")
+                        else if (typeof data.players.list === 'string') {
+                            playerNames = data.players.list.split(',').map(n => n.trim());
+                        }
+
+                        // Render the extracted names
+                        if (playerNames.length > 0) {
+                            playerNames.forEach(name => {
+                                const tag = document.createElement('div');
+                                tag.className = 'player-tag';
+                                // Use mc-heads.net for avatars
+                                const headUrl = `https://mc-heads.net/avatar/${name}/24`;
+                                tag.innerHTML = `<img src="${headUrl}" alt="${name}"> ${name}`;
+                                playerListEl.appendChild(tag);
+                            });
+                        } else {
+                            playerListEl.innerHTML = '<p class="empty-text">Players are online, but names are hidden.</p>';
+                        }
+
                     } else if (currentPlayers === 0) {
                         playerListEl.innerHTML = '<p class="empty-text">No players currently online.</p>';
                     } else {
-                        // Online but list is hidden/not returned
-                        playerListEl.innerHTML = '<p class="empty-text">Player list hidden by server.</p>';
+                        playerListEl.innerHTML = '<p class="empty-text">Server hides player list (Query disabled).</p>';
                     }
 
                 } else {
-                    // Offline State
                     setOfflineState();
                 }
             } catch (error) {
@@ -154,18 +158,14 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('player-list').innerHTML = '<p class="empty-text">Server is offline.</p>';
         }
 
-        // Helper: Live Uptime Calculator
         function updateUptime(element, startTime) {
             const now = Date.now();
             const diff = now - startTime;
-            
             const hours = Math.floor(diff / (1000 * 60 * 60));
             const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            
             element.innerText = `${hours}h ${minutes}m`;
         }
 
-        // Helper: Number Count-Up Animation
         function animateValue(obj, start, end, duration) {
             let startTimestamp = null;
             const step = (timestamp) => {
@@ -179,18 +179,13 @@ document.addEventListener('DOMContentLoaded', () => {
             window.requestAnimationFrame(step);
         }
 
-        // Initial fetch
         fetchServerStatus();
-        
-        // Update uptime every minute
         setInterval(() => {
             const uptimeEl = document.getElementById('server-uptime');
             if (uptimeEl && document.querySelector('#server-status .dot').classList.contains('online')) {
                 updateUptime(uptimeEl, sessionStartTime);
             }
         }, 60000);
-
-        // Fetch new player data every 60 seconds
         setInterval(fetchServerStatus, 60000);
     }
 });
