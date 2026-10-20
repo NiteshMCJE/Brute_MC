@@ -73,7 +73,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('server-status')) {
         
         // Mock start time for uptime calculation
-        // If API doesn't return a start time, we calculate from page load
         let sessionStartTime = Date.now() - (2 * 60 * 60 * 1000); // Mock: server started 2 hours ago
         
         async function fetchServerStatus() {
@@ -97,7 +96,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     
                     // Player Counts with Count-Up Animation
                     const currentPlayers = data.players.online;
-                    const maxPlayers = data.players.max || 100;
+                    const maxPlayers = data.players.max || 50;
                     animateValue(playerCountEl, 0, currentPlayers, 1000);
                     playerMaxEl.innerText = maxPlayers;
                     
@@ -105,18 +104,24 @@ document.addEventListener('DOMContentLoaded', () => {
                     versionEl.innerText = data.version || '1.21.x';
                     
                     // Uptime Logic
-                    // Since APIs usually don't provide "start time", we use our mock/session time
                     updateUptime(uptimeEl, sessionStartTime);
 
                     // Player List
                     if (currentPlayers > 0 && data.players.list) {
                         playerListEl.innerHTML = '';
+                        
                         data.players.list.forEach(player => {
+                            // FIX: Extract name and UUID correctly from the API object
+                            const playerName = player.name || player;
+                            const playerUUID = player.uuid || playerName; // Fallback to name if UUID missing
+
                             const tag = document.createElement('div');
                             tag.className = 'player-tag';
-                            // Use mc-heads.net for avatars
-                            const headUrl = `https://mc-heads.net/avatar/${player}/24`;
-                            tag.innerHTML = `<img src="${headUrl}" alt="${player}"> ${player}`;
+                            
+                            // Use mc-heads.net for avatars (using UUID for accuracy)
+                            const headUrl = `https://mc-heads.net/avatar/${playerUUID}/24`;
+                            
+                            tag.innerHTML = `<img src="${headUrl}" alt="${playerName}"> ${playerName}`;
                             playerListEl.appendChild(tag);
                         });
                     } else if (currentPlayers === 0) {
