@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. Copy IP Button & Toast ---
     const copyBtns = document.querySelectorAll('.copy-ip-btn');
-    
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.innerText = 'IP Copied to Clipboard!';
@@ -61,130 +60,95 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- 4. Live API Fetching (Using mcstatus.io) ---
-    const serverIP = 'brutemc.dpdns.org';
-    const serverPort = '25565'; // Default Minecraft port
-    const apiURL = `https://api.mcstatus.io/v2/status/java/${serverIP}:${serverPort}`;
+    // --- 4. Live API Fetching (From your provided code) ---
+    async function fetchStatus(ip, port, badgeId, countId = null, playersId = null) {
+        try {
+            const response = await fetch(`https://api.mcstatus.io/v2/status/java/${ip}:${port}`);
+            const data = await response.json();
 
-    if (document.getElementById('server-status')) {
-        
-        // We use a session start time to mock uptime since APIs rarely provide exact boot times
-        let sessionStartTime = Date.now() - (2 * 60 * 60 * 1000); 
-        
-        async function fetchServerStatus() {
-            try {
-                const response = await fetch(apiURL);
-                const data = await response.json();
+            const badge = document.getElementById(badgeId);
+            
+            if (data.online) {
+                // Update Badge
+                if (badge) {
+                    badge.className = 'status-indicator';
+                    badge.innerHTML = `<span class="dot online"></span><span class="status-text" style="color: var(--green)">ONLINE</span>`;
+                }
                 
-                const statusDot = document.querySelector('#server-status .dot');
-                const statusText = document.querySelector('#server-status .status-text');
-                const playerCountEl = document.getElementById('player-count');
-                const playerMaxEl = document.getElementById('player-max');
-                const versionEl = document.getElementById('server-version');
-                const uptimeEl = document.getElementById('server-uptime');
-                const playerListEl = document.getElementById('player-list');
-
-                if (data.online) {
-                    // --- ONLINE STATE ---
-                    statusDot.className = 'dot online';
-                    statusText.innerText = 'ONLINE';
-                    statusText.style.color = 'var(--green)';
-                    
-                    // Player Counts (mcstatus.io returns online/max directly)
-                    const currentPlayers = data.players.online;
-                    const maxPlayers = data.players.max || 50;
-                    
-                    animateValue(playerCountEl, 0, currentPlayers, 1000);
-                    playerMaxEl.innerText = maxPlayers;
-                    
-                    // Version (mcstatus.io returns an object with name_clean)
-                    versionEl.innerText = data.version.name_clean || data.version.name_raw || '1.21.x';
-                    
-                    // Uptime Logic
-                    updateUptime(uptimeEl, sessionStartTime);
-
-                    // Player List
-                    if (currentPlayers > 0 && data.players.list && data.players.list.length > 0) {
-                        playerListEl.innerHTML = '';
+                // Update Player Count
+                if (countId) {
+                    const count = document.getElementById(countId);
+                    if (count) {
+                        // Count-up animation
+                        let startTimestamp = null;
+                        const end = data.players.online;
+                        const duration = 1000;
                         
-                        data.players.list.forEach(player => {
-                            const tag = document.createElement('div');
-                            tag.className = 'player-tag';
-                            
-                            // mcstatus.io uses 'name_clean' for the plain text name
-                            const playerName = player.name_clean || 'Unknown';
-                            
-                            // Use mc-heads.net for avatars
-                            const headUrl = `https://mc-heads.net/avatar/${playerName}/24`;
-                            
-                            tag.innerHTML = `<img src="${headUrl}" alt="${playerName}"> ${playerName}`;
-                            playerListEl.appendChild(tag);
-                        });
-                    } else if (currentPlayers === 0) {
-                        playerListEl.innerHTML = '<p class="empty-text">No players currently online.</p>';
-                    } else {
-                        playerListEl.innerHTML = '<p class="empty-text">Server hides player list (Query disabled).</p>';
+                        const step = (timestamp) => {
+                            if (!startTimestamp) startTimestamp = timestamp;
+                            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                            count.innerText = Math.floor(progress * end);
+                            if (progress < 1) window.requestAnimationFrame(step);
+                        };
+                        window.requestAnimationFrame(step);
                     }
-
-                } else {
-                    // --- OFFLINE STATE ---
-                    setOfflineState();
                 }
-            } catch (error) {
-                console.error("API Error:", error);
-                setOfflineState();
+                
+                // Update Player List
+                if (playersId) {
+                    const players = document.getElementById(playersId);
+                    if (players) {
+                        if (data.players.list && data.players.list.length > 0) {
+                            players.innerHTML = '';
+                            data.players.list.forEach(p => {
+                                const tag = document.createElement('div');
+                                tag.className = 'player-tag';
+                                const name = p.name_clean;
+                                const headUrl = `https://mc-heads.net/avatar/${name}/24`;
+                                tag.innerHTML = `<img src="${headUrl}" alt="${name}"> ${name}`;
+                                players.appendChild(tag);
+                            });
+                        } else {
+                            players.innerHTML = '<p class="empty-text">No players online.</p>';
+                        }
+                    }
+                }
+            } else {
+                // Server is offline
+                if (badge) {
+                    badge.className = 'status-indicator';
+                    badge.innerHTML = `<span class="dot offline"></span><span class="status-text" style="color: var(--red)">OFFLINE</span>`;
+                }
+                
+                if (countId) {
+                    const count = document.getElementById(countId);
+                    if (count) count.innerText = '0';
+                }
+                if (playersId) {
+                    const players = document.getElementById(playersId);
+                    if (players) players.innerHTML = '<p class="empty-text">Server offline.</p>';
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching status", error);
+            
+            // Fallback for API Error
+            const badge = document.getElementById(badgeId);
+            if (badge) {
+                badge.className = 'status-indicator';
+                badge.innerHTML = `<span class="dot offline"></span><span class="status-text" style="color: var(--red)">OFFLINE</span>`;
             }
         }
+    }
 
-        function setOfflineState() {
-            document.querySelector('#server-status .dot').className = 'dot offline';
-            const statusText = document.querySelector('#server-status .status-text');
-            statusText.innerText = 'OFFLINE';
-            statusText.style.color = 'var(--red)';
-            
-            document.getElementById('player-count').innerText = '0';
-            document.getElementById('player-max').innerText = '0';
-            document.getElementById('server-version').innerText = '--';
-            document.getElementById('server-uptime').innerText = '0h 0m';
-            document.getElementById('player-list').innerHTML = '<p class="empty-text">Server is offline.</p>';
-        }
-
-        function updateUptime(element, startTime) {
-            const now = Date.now();
-            const diff = now - startTime;
-            
-            const hours = Math.floor(diff / (1000 * 60 * 60));
-            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-            
-            element.innerText = `${hours}h ${minutes}m`;
-        }
-
-        function animateValue(obj, start, end, duration) {
-            if (!obj) return;
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = Math.floor(progress * (end - start) + start);
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
-                }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        // Initial fetch
-        fetchServerStatus();
+    // Run on page load (Only if we are on the home page)
+    if (document.getElementById('main-badge')) {
+        // Fetch status for the main server
+        fetchStatus('brutemc.dpdns.org', '25565', 'main-badge', 'player-count', 'player-list');
         
-        // Live Uptime update loop
+        // Refresh every 60 seconds
         setInterval(() => {
-            const uptimeEl = document.getElementById('server-uptime');
-            if (uptimeEl && document.querySelector('#server-status .dot').classList.contains('online')) {
-                updateUptime(uptimeEl, sessionStartTime);
-            }
+            fetchStatus('brutemc.dpdns.org', '25565', 'main-badge', 'player-count', 'player-list');
         }, 60000);
-
-        // Re-fetch full API data every 60 seconds
-        setInterval(fetchServerStatus, 60000);
     }
 });
