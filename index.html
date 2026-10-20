@@ -8,7 +8,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="css/style.css">
+    <!-- Added ?v=2 to force browser to load the new CSS -->
+    <link rel="stylesheet" href="css/style.css?v=2">
 </head>
 <body>
     <!-- Ambient Background -->
@@ -18,8 +19,7 @@
     <nav class="navbar">
         <div class="nav-inner">
             <a href="index.html" class="brand">
-                <!-- Place your GIF logo here -->
-                <img src="assets/logo.gif" alt="Brute MC Logo" class="logo-gif">
+                <img src="assets/logo.gif" alt="Brute MC Logo" class="logo-gif" onerror="this.src='https://via.placeholder.com/50/111/f5a623?text=B'">
                 <span class="brand-text">BRUTE<span>MC</span></span>
             </a>
             <div class="nav-links">
@@ -63,6 +63,7 @@
 
         <div class="status-card glass-panel">
             <div class="status-top">
+                <!-- Changed to match the ID expected by JS -->
                 <div class="status-indicator" id="server-status">
                     <span class="dot loading"></span>
                     <span class="status-text">Fetching...</span>
@@ -74,7 +75,7 @@
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Players</span>
-                        <span class="stat-value"><span id="player-count">0</span> / <span id="player-max">100</span></span>
+                        <span class="stat-value"><span id="player-count">0</span> / <span id="player-max">50</span></span>
                     </div>
                     <div class="stat-item">
                         <span class="stat-label">Version</span>
@@ -85,8 +86,9 @@
             
             <div class="player-list-container">
                 <h3>Players Online</h3>
+                <!-- Target this ID for the list -->
                 <div class="player-list" id="player-list">
-                    <p class="empty-text">No players currently online.</p>
+                    <p class="empty-text">Loading players...</p>
                 </div>
             </div>
         </div>
@@ -109,6 +111,7 @@
         <p>&copy; 2024 Brute MC. Not affiliated with Mojang or Microsoft.</p>
     </footer>
 
-    <script src="js/script.js"></script>
+    <!-- Added ?v=2 to force browser to load the new JS -->
+    <script src="js/script.js?v=2"></script>
 </body>
 </html>
